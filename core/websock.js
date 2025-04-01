@@ -126,10 +126,11 @@ export default class Websock {
 
     rQshiftStr(len) {
         let str = "";
+        const td = new TextDecoder();
         // Handle large arrays in steps to avoid long strings on the stack
         for (let i = 0; i < len; i += 4096) {
             let part = this.rQshiftBytes(Math.min(4096, len - i), false);
-            str += String.fromCharCode.apply(null, part);
+            str += td.decode(part);
         }
         return str;
     }
