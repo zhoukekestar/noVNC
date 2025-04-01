@@ -510,7 +510,7 @@ export default class RFB extends EventTargetMixin {
             this._clipboardText = text;
             RFB.messages.extendedClipboardNotify(this._sock, [extendedClipboardFormatText]);
         } else {
-            let length, i;
+            let length, i, utf8flag = false;
             let data;
 
             length = 0;
@@ -528,9 +528,28 @@ export default class RFB extends EventTargetMixin {
                 /* Only ISO 8859-1 is supported */
                 if (code > 0xff) {
                     code = 0x3f; // '?'
+                    utf8flag = true;
                 }
 
                 data[i++] = code;
+            }
+
+            
+            function bytesToBase64(bytes) {
+                const binString = Array.from(bytes, (byte) =>
+                    String.fromCodePoint(byte),
+                ).join("");
+                return btoa(binString);
+            }
+            
+            function text2uint8array(text) {
+                const te = new TextEncoder();
+                const base64string = bytesToBase64(te.encode(text));
+                return te.encode(base64string);
+            }
+
+            if (utf8flag) {
+                data = text2uint8array(text);
             }
 
             RFB.messages.clientCutText(this._sock, data);
